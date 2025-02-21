@@ -11,6 +11,7 @@ import com.github.regular154.sjes.aggregate.setup.domain.account.event.AccountFu
 import com.github.regular154.sjes.aggregate.setup.domain.account.event.AccountFundsWithdrawn;
 import com.github.regular154.sjes.aggregate.setup.domain.account.event.AccountNameChanged;
 
+import java.util.List;
 import java.util.UUID;
 
 public class Active extends AccountState {
@@ -26,37 +27,37 @@ public class Active extends AccountState {
     }
 
     @Override
-    public AccountEvent processCommand(AccountCommand command, long sequence) throws DomainException {
+    public List<AccountEvent> processCommand(AccountCommand command, long sequence) throws DomainException {
         return switch (command) {
             case Deposit deposit -> {
                 if (deposit.getAmount() <= 0) {
                     throw new DomainException("Deposit amount must be greater than 0");
                 }
                 var resultedBalance = balance + deposit.getAmount();
-                yield new AccountFundsDeposited(
+                yield List.of(new AccountFundsDeposited(
                         UUID.randomUUID().toString(),
                         command.getAggregateId(),
                         sequence,
                         deposit.getAmount(),
-                        resultedBalance);
+                        resultedBalance));
             }
             case Withdraw withdraw -> {
                 if (withdraw.getAmount() <= 0) {
                     throw new DomainException("Deposit amount must be greater than 0");
                 }
                 var resultedBalance = balance - withdraw.getAmount();
-                yield new AccountFundsWithdrawn(
+                yield List.of(new AccountFundsWithdrawn(
                         UUID.randomUUID().toString(),
                         command.getAggregateId(),
                         sequence,
                         withdraw.getAmount(),
-                        resultedBalance);
+                        resultedBalance));
             }
-            case ChangeAccountName changeAccountName -> new AccountNameChanged(
+            case ChangeAccountName changeAccountName -> List.of(new AccountNameChanged(
                     UUID.randomUUID().toString(),
                     changeAccountName.getAggregateId(),
                     sequence,
-                    changeAccountName.getName());
+                    changeAccountName.getName()));
             default -> throw new IllegalStateException("Unexpected command");
         };
     }

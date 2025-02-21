@@ -10,6 +10,7 @@ import com.github.regular154.sjes.aggregate.setup.domain.accountnameregistry.eve
 import com.github.regular154.sjes.aggregate.setup.domain.accountnameregistry.event.AccountNameReleased;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -23,27 +24,27 @@ public class AccountNameRegistryState extends State<AccountNameRegistryEvent, Ac
     }
 
     @Override
-    public AccountNameRegistryEvent processCommand(AccountNameRegistryCommand command, long sequence) throws DomainException {
+    public List<AccountNameRegistryEvent> processCommand(AccountNameRegistryCommand command, long sequence) throws DomainException {
         return switch (command) {
             case ClaimAccountName claimAccountName -> {
                 if (nameRegistry.contains(claimAccountName.getName())) {
                     throw new DomainException("Name already claimed");
                 }
-                yield new AccountNameClaimed(
+                yield List.of(new AccountNameClaimed(
                         UUID.randomUUID().toString(),
                         claimAccountName.getAggregateId(),
                         sequence,
-                        claimAccountName.getName());
+                        claimAccountName.getName()));
             }
             case ReleaseAccountName releaseAccountName -> {
                 if (!nameRegistry.contains(releaseAccountName.getName())) {
                     throw new DomainException("Name not claimed");
                 }
-                yield new AccountNameReleased(
+                yield List.of(new AccountNameReleased(
                         UUID.randomUUID().toString(),
                         releaseAccountName.getAggregateId(),
                         sequence,
-                        releaseAccountName.getName());
+                        releaseAccountName.getName()));
             }
             default -> throw new DomainException("Unknown command");
         };

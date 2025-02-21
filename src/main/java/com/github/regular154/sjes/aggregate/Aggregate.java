@@ -61,9 +61,14 @@ public abstract class Aggregate<E extends Event, C extends Command, S extends St
     }
 
     public void process(C command) throws DomainException {
-        E event = state.processCommand(command, nextSequence());
-        state = (S) state.applyEvent(event);
-        events.add(event);
+        List<E> events = state.processCommand(command, nextSequence()).stream()
+                .sorted(Comparator.comparingLong(Event::getSequence))
+                .toList();
+        this.sequence = events.getLast().getSequence();
+        for (E event : events) {
+            state = (S) state.applyEvent(event);
+        }
+        this.events.addAll(events);
     }
 
     private void apply(E event) {
