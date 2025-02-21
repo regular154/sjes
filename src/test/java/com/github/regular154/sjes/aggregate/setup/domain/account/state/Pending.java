@@ -10,7 +10,6 @@ import com.github.regular154.sjes.aggregate.setup.domain.account.event.AccountFu
 import com.github.regular154.sjes.aggregate.setup.domain.account.event.AccountFundsWithdrawn;
 import com.github.regular154.sjes.aggregate.setup.domain.account.event.AccountNameChanged;
 
-import java.util.List;
 import java.util.UUID;
 
 
@@ -27,26 +26,26 @@ public class Pending extends AccountState {
     }
 
     @Override
-    public List<AccountEvent> processCommand(AccountCommand command, long sequence) throws DomainException {
+    public AccountEvent processCommand(AccountCommand command, long sequence) throws DomainException {
         return switch (command) {
             case Deposit deposit -> {
                 if (deposit.getAmount() <= 0) {
                     throw new DomainException("Deposit amount must be greater than 0");
                 }
                 var resultedBalance = balance + deposit.getAmount();
-                yield List.of(new AccountFundsDeposited(
+                yield new AccountFundsDeposited(
                         UUID.randomUUID().toString(),
                         command.getAggregateId(),
                         sequence,
                         deposit.getAmount(),
-                        resultedBalance));
+                        resultedBalance);
             }
             case Withdraw ignored -> throw new DomainException("Account is not active");
-            case ChangeAccountName changeAccountName -> List.of(new AccountNameChanged(
+            case ChangeAccountName changeAccountName -> new AccountNameChanged(
                     UUID.randomUUID().toString(),
                     changeAccountName.getAggregateId(),
                     sequence,
-                    changeAccountName.getName()));
+                    changeAccountName.getName());
             default -> throw new IllegalStateException("Unexpected command");
         };
     }
